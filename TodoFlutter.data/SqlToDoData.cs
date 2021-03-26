@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 using TodoFlutter.core.Models;
 using TodoFlutter.core.Models.DTO;
 using TodoFlutter.core.Models.GatwayResponses.Repositories;
+using TodoFlutter.core.Models.Request;
 using TodoFlutter.data.Helpers;
 using TodoFlutter.data.Infrastructure;
 
@@ -23,6 +25,7 @@ namespace TodoFlutter.data
         private readonly ITokenFactory _tokenFactory;
         private readonly IJwtFactory _jwtFactory;
         private readonly IJwtTokenValidator _jwtTokenValidator;
+        private readonly LinkGenerator _linkgenerator;
 
         public SqlToDoData(
             ToDoDbContext toDoDbContext,
@@ -30,7 +33,8 @@ namespace TodoFlutter.data
             ILogger<SqlToDoData> logger,
             ITokenFactory tokenFactory,
             IJwtFactory jwtFactory,
-            IJwtTokenValidator jwtTokenValidator
+            IJwtTokenValidator jwtTokenValidator,
+            LinkGenerator linkgenerator
             )
         {
             this._toDoDbContext = toDoDbContext;
@@ -39,6 +43,7 @@ namespace TodoFlutter.data
             this._tokenFactory = tokenFactory;
             this._jwtFactory = jwtFactory;
             this._jwtTokenValidator = jwtTokenValidator;
+            this._linkgenerator = linkgenerator;
         }
 
         #region AppUser
@@ -111,6 +116,37 @@ namespace TodoFlutter.data
                 new[] { new Error("login_failure", "Invalid username or password.") }.ToList(),
                 ResponseMessageTypes.USER_LOGIN_FAILURE
              );
+        }
+
+        public async Task<GetUserFromTokenResponse> GetUserFromToken(string token, string signInKey)
+        {
+            ///  Before we can return the <see cref="AppUser"/> we must extract the 
+            var claimsPrincipal = _jwtTokenValidator.GetPrincipalFromToken(token, signInKey);
+            if (claimsPrincipal != null)
+            {
+                var id = claimsPrincipal.Claims.First(c => c.Type == "id");
+                var user = await _userManager.FindByIdAsync(id.Value);
+                if(user != null)
+                {
+                    var appUser = DataExtensions.ToUserDTO(user);
+                    var response = new GetUserFromTokenResponse(
+                        appUser, 
+                        true, 
+                        null, 
+                        ResponseMessageTypes.SUCCESS_AUTHENTICATING_TOKEN_FOR_USER
+                        );
+                    return response;
+                }
+            }
+
+            var badResponse = new GetUserFromTokenResponse(
+                null,
+                false,
+                new[] { new Error("ValidateAccessToken", "Invalid or expired token.")}.ToList(),
+                ResponseMessageTypes.COULD_NOT_AUTHENTICATE_TOKEN_FOR_USER
+                );
+            return badResponse;
+
         }
 
         #endregion
@@ -224,6 +260,7 @@ namespace TodoFlutter.data
 
         #endregion
 
+        #region ToDos
         public async Task<Todo> GetByIdAsync(int id)
         {
             return await _toDoDbContext.ToDos.FindAsync(id);
@@ -236,11 +273,45 @@ namespace TodoFlutter.data
             return todo;
         }
 
-        public async Task<Todo> AddAsync(Todo todo)
+        public async Task<AddToDoResponse> AddToDoAsync(Todo todo)
         {
-            await _toDoDbContext.AddAsync(todo);
-            return todo;
+            try {
+                // Create a new to
+                await _toDoDbContext.AddAsync(todo);
+                await _toDoDbContext.SaveChangesAsync();
+
+                //  Using our _linkGenerator object
+                var resourceLocation = _linkgenerator.GetPathByAction(
+                    "get",
+                    "todos",
+                    new { todoId = todo.Id, AccessToken = string.Empty });
+
+
+                var response = new AddToDoResponse(
+                    todo.Id.ToString(),
+                    resourceLocation,
+                    true,
+                    null,
+                    ResponseMessageTypes.ADD_TODO_SUCCESS
+                    );
+
+                return response;
+            }
+            catch {
+
+                var response = new AddToDoResponse(
+                    string.Empty,
+                    string.Empty,
+                    false,
+                    new[] { new Error("refresh__token_failure", "Invalid or bad refresh token") }.ToList(),
+                    ResponseMessageTypes.ADD_TODO_FAILURE
+                    );
+
+                return response;
+            }
+            
         }
+
 
         public async Task<Todo> DeleteAsync(int id)
         {
@@ -279,6 +350,8 @@ namespace TodoFlutter.data
                 .ToListAsync();
             return todos.Count;
         }
+
+        #endregion
 
     }
 }

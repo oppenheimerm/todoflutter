@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TodoFlutter.core.Models
+namespace TodoFlutter.core.Models.Request
 {
     public class ExchangeRefreshTokenRequest
     {

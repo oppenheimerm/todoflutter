@@ -5,6 +5,12 @@ namespace TodoFlutter.data
 {
     public class TokenFactory : ITokenFactory
     {
+        /// <summary>
+        /// Creates a cryptographically fortified random value which is used for
+        /// generating a refresh token.
+        /// </summary>
+        /// <param name="size"></param>
+        /// <returns></returns>
         public string GenerateToken(int size = 32)
         {
             var randomNumber = new byte[size];

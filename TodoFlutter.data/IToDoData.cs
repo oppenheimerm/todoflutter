@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TodoFlutter.core.Models;
 using TodoFlutter.core.Models.GatwayResponses.Repositories;
+using TodoFlutter.core.Models.Request;
 
 namespace TodoFlutter.data
 {
@@ -13,12 +14,13 @@ namespace TodoFlutter.data
     {
         //  Users
         Task<CreateUserResponse> CreateUserAsync(string userName, string emailaddress, string Firsname, string password);
+        Task<GetUserFromTokenResponse> GetUserFromToken(string token, string signInKey);
         //  Refresh Tokens
         Task<RefreshTokenRespone> ExchangeRefreshTokenAsync(ExchangeRefreshTokenRequest exchangeRefreshToken);
         //  ToDo's
         Task<Todo> GetByIdAsync(int id);
         Todo Update(Todo todo);
-        Task<Todo> AddAsync(Todo todo);
+        Task<AddToDoResponse> AddToDoAsync(Todo todo);
         Task<Todo> DeleteAsync(int id);
         Task<IEnumerable<Todo>> GetAllToDosByUserAsync(string userId);
         IEnumerable<Todo> Find(Expression<Func<Todo, bool>> predicate);

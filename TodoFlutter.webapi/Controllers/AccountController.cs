@@ -18,6 +18,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using TodoFlutter.data;
+using TodoFlutter.core.Models.Request;
 
 
 //  See: https://medium.com/swlh/securing-your-net-core-3-api-using-identity-93d6426d6311
@@ -96,6 +97,16 @@ namespace TodoFlutter.webapi.Controllers
                     )
                 );
             return refreshTokenResponse.Success ? Ok(refreshTokenResponse) : BadRequest(refreshTokenResponse);
+        }
+
+        // POST api/account/user
+        [HttpPost("user")]
+        public async Task<ActionResult> GetUser([FromBody] GetUserRequest model)
+        {
+            if (!ModelState.IsValid) { return BadRequest(ModelState); }
+
+            var response = await _itodoData.GetUserFromToken(model.AccessToken, _configuration["AuthSettings:SecretKey"]);
+            return response.Success ? Ok(response) : BadRequest(response);
         }
 
 

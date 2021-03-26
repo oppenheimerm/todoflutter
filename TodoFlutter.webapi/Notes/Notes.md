@@ -19,6 +19,16 @@ This method **does a lot more.** Here's a rough breakdown:
 
 -  If you are not interested in requiring confirmed emails, lockout, etc, then using **UserManager.CheckPasswordAsync** as in your question will suffice.
 
+JWT Authentication with ASP.NET Core 2 Web API, Angular 5, .NET Core Identity and Facebook Login - 
+https://fullstackmark.com/post/13/jwt-authentication-with-aspnet-core-2-web-api-angular-5-net-core-identity-and-facebook-login
+
+JWT Authentication Flow with Refresh Tokens in ASP.NET Core Web API - 
+https://fullstackmark.com/post/19/jwt-authentication-flow-with-refresh-tokens-in-aspnet-core-web-api
+
+
+ASP.NET Core 3.1 - Create and Validate JWT Tokens + Use Custom JWT Middleware -
+https://jasonwatmore.com/post/2020/07/21/aspnet-core-3-create-and-validate-jwt-tokens-use-custom-jwt-middleware
+
 
 https://damienbod.com/2019/10/25/securing-a-web-api-using-multiple-token-servers/
 

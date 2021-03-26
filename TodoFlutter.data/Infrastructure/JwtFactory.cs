@@ -42,7 +42,7 @@ namespace TodoFlutter.data.Infrastructure
                 _jwtOptions.Audience,
                 claims,
                 _jwtOptions.NotBefore,
-                DateTime.UtcNow.AddDays(7),//_jwtOptions.Expiration,
+                _jwtOptions.Expiration, // 2 hours from now
                 _jwtOptions.SigningCredentials);
 
             //  We set the kid to the _jwtOptions.Audience. So, what’s the kid? it’s a hint
