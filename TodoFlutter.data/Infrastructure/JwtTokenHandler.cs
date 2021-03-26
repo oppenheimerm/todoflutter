@@ -11,6 +11,9 @@ using System.Threading.Tasks;
 
 namespace TodoFlutter.data.Infrastructure
 {
+    /// <summary>
+    /// Handles token validation. <see cref="ValidateToken(string, TokenValidationParameters)"/>
+    /// </summary>
     public class JwtTokenHandler : IJwtTokenHandler
     {
         private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler;
@@ -31,16 +34,17 @@ namespace TodoFlutter.data.Infrastructure
             return _jwtSecurityTokenHandler.WriteToken(jwt);
         }
 
+        /// <summary>
+        /// Validate an incomming token and return <see cref="ClaimsPrincipal"/>, which can be used to
+        /// extract the user id.
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="tokenValidationParameters"></param>
+        /// <returns></returns>
         public ClaimsPrincipal ValidateToken(string token, TokenValidationParameters tokenValidationParameters)
         {
             try
             {
-                /*var principal = _jwtSecurityTokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
-
-                if (!(securityToken is JwtSecurityToken jwtSecurityToken) || !jwtSecurityToken.Header.Alg.Equals(Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-                    throw new SecurityTokenException("Invalid token");
-
-                return principal;*/
                 var key = Encoding.ASCII.GetBytes(_configuration["AuthSettings:SecretKey"]);
                 var issuer = _configuration["JwtIssuerOptions:Issuer"];
                 var audience = _configuration["JwtIssuerOptions:Audience"];

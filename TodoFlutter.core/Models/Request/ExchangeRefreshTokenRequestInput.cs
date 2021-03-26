@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
 
-namespace TodoFlutter.core.Models
+namespace TodoFlutter.core.Models.Request
 {
     //  His: Web.Api.Models.Request
     //  Input model for a user refresh token request.
