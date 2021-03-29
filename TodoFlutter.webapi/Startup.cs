@@ -23,6 +23,9 @@ using TodoFlutter.data.Infrastructure.Helpers;
 using TodoFlutter.webapi.Extensions;
 using TodoFlutter.webapi.Models;
 using Swashbuckle.AspNetCore.Swagger;
+using Azure.Security.KeyVault.Secrets;
+using Azure.Core;
+using Azure.Identity;
 
 namespace TodoFlutter.webapi
 {
@@ -47,13 +50,13 @@ namespace TodoFlutter.webapi
             
 
             services.AddDbContextPool<ToDoDbContext>(options => {
-                options.UseSqlServer(Configuration.GetConnectionString("ToDb"));
+                options.UseSqlServer(Configuration["ConnectionStrings:ToDb"]);
             });
 
             services.AddDbContext<ToDoDbContext>(options =>
                 // options.UseSqlite(
                 options.UseSqlServer(
-                    Configuration.GetConnectionString("ToDb")));
+                    Configuration["ConnectionStrings:ToDb"]));
 
 
             services.AddRazorPages();
@@ -70,32 +73,46 @@ namespace TodoFlutter.webapi
                 .AddEntityFrameworkStores<ToDoDbContext>();
 
             //  get auth settings from secrets/config file
-            var authsettingsSeceretKey = Configuration.GetSection("AuthSettings:SecretKey").Value;
-            
-            var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(authsettingsSeceretKey));
+            //var authsettingsSeceretKey = Configuration.GetSection("AuthSettings:SecretKey").Value;
+            //var authsettingsSeceretKey = Configuration["AuthSettings:SecretKey"];
+
+
+            //  Config secrects
+            var clientSecrects = new SecretClient(new Uri("https://todoflutterkeyvalut.vault.azure.net/"), new DefaultAzureCredential());
+            KeyVaultSecret authsettingsSeceretKey = clientSecrects.GetSecret("AuthSettings--SecretKey").Value;
+            KeyVaultSecret authsettingsJwtIssuerOptionsIssuer = clientSecrects.GetSecret("JwtIssuerOptions--Issuer").Value;
+            KeyVaultSecret authsettingsJwtIssuerOptionsAudience = clientSecrects.GetSecret("JwtIssuerOptions--Audience").Value;
+            KeyVaultSecret authsettingsJwtIssuerAudience = clientSecrects.GetSecret("JwtIssuerOptions--Audience").Value;
+
+            var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(authsettingsSeceretKey.ToString()));
 
             // jwt wire up
             // Get options from app settings
-            var JwtIssuerOptionsIssuer = Configuration.GetSection("JwtIssuerOptions:Issuer").Value;
-            var JwtIssuerOptionsAudience = Configuration.GetSection("JwtIssuerOptions:Audience").Value;
-            var JwtIssuerAudience = Configuration.GetSection("JwtIssuerOptions:Authority").Value;
+            //  
+            //var JwtIssuerOptionsIssuer = Configuration.GetSection("JwtIssuerOptions:Issuer").Value;
+            //var JwtIssuerOptionsAudience = Configuration.GetSection("JwtIssuerOptions:Audience").Value;
+            //var JwtIssuerAudience = Configuration.GetSection("JwtIssuerOptions:Authority").Value;
+
+            var JwtIssuerOptionsIssuer = authsettingsJwtIssuerOptionsIssuer;
+            var JwtIssuerOptionsAudience = authsettingsJwtIssuerOptionsAudience;
+            var JwtIssuerAudience = authsettingsJwtIssuerAudience;
 
 
             // Configure JwtIssuerOptions
             services.Configure<JwtIssuerOptions>(options =>
             {
-                options.Issuer = JwtIssuerOptionsIssuer;
-                options.Audience = JwtIssuerOptionsAudience;
+                options.Issuer = JwtIssuerOptionsIssuer.ToString();
+                options.Audience = JwtIssuerOptionsAudience.ToString();
                 options.SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
             });
 
             var tokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
-                ValidIssuer = JwtIssuerOptionsIssuer,
+                ValidIssuer = JwtIssuerOptionsIssuer.ToString(),
 
                 ValidateAudience = true,
-                ValidAudience = JwtIssuerOptionsAudience,
+                ValidAudience = JwtIssuerOptionsAudience.ToString(),
 
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = signingKey,
@@ -118,7 +135,7 @@ namespace TodoFlutter.webapi
 
             }).AddJwtBearer(configureOptions =>
             {
-                configureOptions.ClaimsIssuer = JwtIssuerOptionsIssuer;
+                configureOptions.ClaimsIssuer = JwtIssuerOptionsIssuer.ToString();
                 configureOptions.TokenValidationParameters = tokenValidationParameters;
                 configureOptions.SaveToken = true;
 
@@ -197,6 +214,22 @@ namespace TodoFlutter.webapi
 
             //  For JWT must come before: app.UseEndpoints
             app.UseAuth();
+
+            SecretClientOptions options = new SecretClientOptions()
+            {
+                Retry =
+                {
+                    Delay= TimeSpan.FromSeconds(2),
+                    MaxDelay = TimeSpan.FromSeconds(16),
+                    MaxRetries = 5,
+                    Mode = RetryMode.Exponential
+                 }
+            };
+            var client = new SecretClient(new Uri("https://todoflutterkeyvalut.vault.azure.net/"), new DefaultAzureCredential(), options);
+
+            //  Test getting secerts
+            //KeyVaultSecret secret = client.GetSecret("ConnectionStrings--AppConfig");
+            //string secretValue = secret.Value;
 
             app.UseEndpoints(endpoints =>
             {

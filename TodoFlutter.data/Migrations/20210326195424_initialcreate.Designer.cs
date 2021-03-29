@@ -10,8 +10,8 @@ using TodoFlutter.data;
 namespace TodoFlutter.data.Migrations
 {
     [DbContext(typeof(ToDoDbContext))]
-    [Migration("20210316194207_Tbl_Refresh_Tokens")]
-    partial class Tbl_Refresh_Tokens
+    [Migration("20210326195424_initialcreate")]
+    partial class initialcreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
