@@ -96,6 +96,7 @@ namespace TodoFlutter.data
 
                     //  Generate accesss token
                     return new CreateUserLoginResponse(
+                        Guid.Parse(user.Id),
                         user.Email,
                         user.Firstname,
                         await _jwtFactory.GenerateEncodedToken(
@@ -114,6 +115,7 @@ namespace TodoFlutter.data
 
             //error
             return new CreateUserLoginResponse(
+                Guid.Empty,
                 string.Empty,
                 string.Empty,
                 null,
