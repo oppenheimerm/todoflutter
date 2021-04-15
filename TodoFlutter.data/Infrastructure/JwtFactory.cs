@@ -2,28 +2,41 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Principal;
+using System.Text;
 using System.Threading.Tasks;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using TodoFlutter.core.Models;
 using TodoFlutter.core.Models.DTO;
 using TodoFlutter.data.Infrastructure;
+using TodoFlutter.data.Infrastructure.Helpers;
 
 namespace TodoFlutter.data.Infrastructure
 {
     public class JwtFactory : IJwtFactory
     {
-        private readonly IJwtTokenHandler _jwtTokenHandler;
-        private readonly JwtIssuerOptions _jwtOptions;
+        private readonly JwtOptions _jwtOptions;
+        private readonly JwtTokenHelper _jwtTokenHelper;
+        private readonly IConfiguration _configuration;
 
-        public JwtFactory(IJwtTokenHandler jwtTokenHandler, IOptions<JwtIssuerOptions> jwtOptions)
+        public JwtFactory(
+            IJwtTokenHandler jwtTokenHandler,
+            IConfiguration configuration
+            )
         {
-            _jwtTokenHandler = jwtTokenHandler;
-            _jwtOptions = jwtOptions.Value;
-            ThrowIfInvalidOptions(_jwtOptions);
+            _configuration = configuration;
+            _jwtTokenHelper = new JwtTokenHelper();
+            _jwtOptions = new JwtOptions();
         }
 
         public async Task<AccessToken> GenerateEncodedToken(string userId, string userName, string email)
         {
+            var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtTokenHelper.AuthSettingSecretKey.Value));
+            var signInCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+
             var identity = GenerateClaimsIdentity(userId, userName);
 
             var claims = new[]
@@ -32,25 +45,23 @@ namespace TodoFlutter.data.Infrastructure
                  new Claim(JwtRegisteredClaimNames.Email, email),
                  new Claim(JwtRegisteredClaimNames.Jti, await _jwtOptions.JtiGenerator()),
                  new Claim(JwtRegisteredClaimNames.Iat, ToUnixEpochDate(_jwtOptions.IssuedAt).ToString(), ClaimValueTypes.Integer64),
-                 identity.FindFirst(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol),
+                 new Claim(JwtRegisteredClaimNames.Aud, _jwtTokenHelper.JwtAudience.Value),
+                 new Claim(JwtRegisteredClaimNames.Iss, _jwtTokenHelper.JwtIssuer.Value),
                  identity.FindFirst(Helpers.Constants.Strings.JwtClaimIdentifiers.Id)
              };
 
             // Create the JWT security token and encode it.
             var jwt = new JwtSecurityToken(
-                _jwtOptions.Issuer,
-                _jwtOptions.Audience,
-                claims,
-                _jwtOptions.NotBefore,
-                _jwtOptions.Expiration, // 2 hours from now
-                _jwtOptions.SigningCredentials);
+                issuer:_jwtTokenHelper.JwtIssuer.Value,
+                audience:_jwtTokenHelper.JwtAudience.Value,
+                claims:claims,
+                notBefore:_jwtOptions.NotBefore,
+                expires:_jwtOptions.Expiration, // 2 hours from now
+                signingCredentials:signInCredentials);
 
-            //  We set the kid to the _jwtOptions.Audience. So, what’s the kid? it’s a hint
-            //  indicating which key was used to secure the JWS
-            //  See:  https://www.carlrippon.com/asp-net-core-web-api-multi-tenant-jwts/
-            jwt.Header.Add("kid", _jwtOptions.Audience);
+            var _jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
 
-            return new AccessToken(_jwtTokenHandler.WriteToken(jwt), (int)_jwtOptions.ValidFor.TotalSeconds);
+            return new AccessToken(_jwtSecurityTokenHandler.WriteToken(jwt), (int)_jwtOptions.ValidFor.TotalSeconds);
         }
 
         private static ClaimsIdentity GenerateClaimsIdentity(string id, string userName)
@@ -58,7 +69,6 @@ namespace TodoFlutter.data.Infrastructure
             return new ClaimsIdentity(new GenericIdentity(userName, "Token"), new[]
             {
                 new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Id, id),
-                new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.ApiAccess)
             });
         }
 
@@ -68,24 +78,5 @@ namespace TodoFlutter.data.Infrastructure
                                new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero))
                               .TotalSeconds);
 
-        private static void ThrowIfInvalidOptions(JwtIssuerOptions options)
-        {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
-            if (options.ValidFor <= TimeSpan.Zero)
-            {
-                throw new ArgumentException("Must be a non-zero TimeSpan.", nameof(JwtIssuerOptions.ValidFor));
-            }
-
-            if (options.SigningCredentials == null)
-            {
-                throw new ArgumentNullException(nameof(JwtIssuerOptions.SigningCredentials));
-            }
-
-            if (options.JtiGenerator == null)
-            {
-                throw new ArgumentNullException(nameof(JwtIssuerOptions.JtiGenerator));
-            }
-        }
     }
 }

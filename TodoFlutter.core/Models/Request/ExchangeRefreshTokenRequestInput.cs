@@ -9,8 +9,6 @@ namespace TodoFlutter.core.Models.Request
     public class ExchangeRefreshTokenRequestInput
     {
         [Required]
-        public string AccessToken { get; set; }
-        [Required]
         public string RefreshToken { get; set; }
     }
 }

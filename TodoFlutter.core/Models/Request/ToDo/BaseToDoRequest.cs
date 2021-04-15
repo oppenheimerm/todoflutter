@@ -5,11 +5,11 @@ namespace TodoFlutter.core.Models.Request.ToDo
     public class BaseToDoRequest
     {
         [Required]
-        public string AccessToken { get; set; }
+        public string UserId { get; set; }
 
-        public BaseToDoRequest(string accessToken)
+        public BaseToDoRequest(string userId)
         {
-            AccessToken = accessToken;
+            UserId = userId;
         }
     }
 }

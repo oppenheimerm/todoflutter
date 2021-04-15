@@ -13,7 +13,13 @@ namespace TodoFlutter.core.Models.GatwayResponses.Repositories
         public AccessToken AccessToken { get; }
         //  User's refresh token
         public string RefreshToken { get; }
+
+        public string Email { get;  }
+        public string Firstname { get; }
+
         public CreateUserLoginResponse(
+            string email,
+            string firstname,
             AccessToken accessToken, 
             string refreshToken, 
             bool success = false, 
@@ -24,6 +30,8 @@ namespace TodoFlutter.core.Models.GatwayResponses.Repositories
         {
             AccessToken = accessToken;
             RefreshToken = refreshToken;
+            Email = email;
+            Firstname = firstname;
         }
     }
 }

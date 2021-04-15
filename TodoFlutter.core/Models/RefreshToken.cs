@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -16,8 +17,8 @@ namespace TodoFlutter.core.Models
         public string Token { get; set; }
         [Required]
         public DateTime Expires { get; set; }
-        public AppUser AppUser { get; set; }
-        [Required]
+        public virtual AppUser AppUser { get; set; }
+        [Required]             
         public Guid AppUserId { get; set; }
         public bool Active => DateTime.UtcNow <= Expires;
         public string RemoteIpAddress { get; set; }

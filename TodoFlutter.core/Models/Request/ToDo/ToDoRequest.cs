@@ -14,7 +14,7 @@ namespace TodoFlutter.core.Models.Request.ToDo
     /// </summary>
     public class ToDoRequest : BaseToDoRequest
     {
-        public ToDoRequest(string accessToken) :base(accessToken)
+        public ToDoRequest(string userId) : base(userId)
         {
 
         }
@@ -23,6 +23,5 @@ namespace TodoFlutter.core.Models.Request.ToDo
         [StringLength(50)]
         public string Task { get; set; }
         public bool Completed { get; set; } = false;
-        public DateTime Date { get; set; }
     }
 }

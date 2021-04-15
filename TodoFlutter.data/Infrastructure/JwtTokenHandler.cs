@@ -8,6 +8,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using TodoFlutter.data.Infrastructure.Helpers;
 
 namespace TodoFlutter.data.Infrastructure
 {
@@ -19,6 +20,7 @@ namespace TodoFlutter.data.Infrastructure
         private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler;
         private readonly IConfiguration _configuration;
         private readonly ILogger<JwtTokenHandler> _logger;
+        private readonly JwtTokenHelper _jwtTokenHelper;
 
         public JwtTokenHandler(ILogger<JwtTokenHandler> logger, IConfiguration configuration)
         {
@@ -27,55 +29,12 @@ namespace TodoFlutter.data.Infrastructure
 
             _logger = logger;
             _configuration = configuration;
+            _jwtTokenHelper = new JwtTokenHelper();
         }
 
         public string WriteToken(JwtSecurityToken jwt)
         {
             return _jwtSecurityTokenHandler.WriteToken(jwt);
-        }
-
-        /// <summary>
-        /// Validate an incomming token and return <see cref="ClaimsPrincipal"/>, which can be used to
-        /// extract the user id.
-        /// </summary>
-        /// <param name="token"></param>
-        /// <param name="tokenValidationParameters"></param>
-        /// <returns></returns>
-        public ClaimsPrincipal ValidateToken(string token, TokenValidationParameters tokenValidationParameters)
-        {
-            try
-            {
-                var key = Encoding.ASCII.GetBytes(_configuration["AuthSettings:SecretKey"]);
-                var issuer = _configuration["JwtIssuerOptions:Issuer"];
-                var audience = _configuration["JwtIssuerOptions:Audience"];
-
-                var principal = _jwtSecurityTokenHandler.ValidateToken(
-                    token,
-                    new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidIssuer = issuer.ToString(),
-                        ValidateAudience = true,
-                        ValidAudience = audience,
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(key),
-                        RequireExpirationTime = false,
-                        ValidateLifetime = true,
-                        // set clockskew to zero so tokens expire exactly at token expiration time (instead of 5 minutes later)
-                        ClockSkew = TimeSpan.Zero,
-
-                    }, out SecurityToken validToken);
-
-                if (!(validToken is JwtSecurityToken jwtSecurityToken) || !jwtSecurityToken.Header.Alg.Equals(Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-                    throw new SecurityTokenException("Invalid token");
-
-                return principal;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError($"Token validation failed: {e.Message}");
-                return null;
-            }
         }
     }
 }

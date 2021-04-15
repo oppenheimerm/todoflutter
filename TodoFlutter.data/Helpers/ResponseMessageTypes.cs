@@ -7,6 +7,8 @@ namespace TodoFlutter.data.Helpers
 {
     public static class ResponseMessageTypes
     {
+        public static string ACTION_NOT_AUTHORIZED = "Not autorized!";
+
         public static string USER_CREATED_SUCCESS = "Success creating user";
         public static string USER_CREATED_FAILURE = "Failed to create user";
         public static string USER_LOGIN_SUCCESS = "Successful login";
@@ -17,6 +19,9 @@ namespace TodoFlutter.data.Helpers
         public static string SUCCESS_AUTHENTICATING_TOKEN_FOR_USER = "Successfully authenticated token";
         public static string ADD_TODO_SUCCESS = "Succes adding a todo item";
         public static string ADD_TODO_FAILURE = "Failed to add a todo item";
+        public static string GET_TODO_SUCCESS = "Retrieved todo item";
+        public static string GET_TODO_FAILURE = "Failed to retrieve todo";
+
 
     }
 }
