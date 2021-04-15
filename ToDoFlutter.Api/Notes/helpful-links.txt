@@ -4,3 +4,6 @@
 
 Using Azure Key Vault with ASP.NET Core in Development Environment
 https://medium.com/volosoft/using-azure-key-vault-with-asp-net-core-in-development-environment-105d60945f2
+
+Configuring Outbound IP addresses for Azure app / Azure Sql service
+https://code-maze.com/azure-sql-with-asp-net-core-web-api/
