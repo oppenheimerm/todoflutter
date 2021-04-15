@@ -13,8 +13,6 @@ namespace TodoFlutter.core.Models.GatwayResponses
 
         public bool Success { get; }
         public IEnumerable<Error> Errors { get; }
-
-
         public string Message { get; }
 
         protected BaseGatewayResponse(bool success = false, IEnumerable<Error> errors = null, string message = null)

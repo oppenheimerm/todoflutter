@@ -6,7 +6,6 @@ namespace TodoFlutter.data.Infrastructure
 {
     public interface IJwtTokenHandler
     {
-        string WriteToken(JwtSecurityToken jwt);
-        ClaimsPrincipal ValidateToken(string token, TokenValidationParameters tokenValidationParameters);
+        string WriteToken(JwtSecurityToken jwt);        
     }
 }

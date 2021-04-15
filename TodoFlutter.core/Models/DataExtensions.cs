@@ -46,19 +46,18 @@ namespace TodoFlutter.core.Models
             };
         }
 
-
-
-        public static ExchangeRefreshTokenRequest ToExchangeRefreshTokenRequest(
-            this ExchangeRefreshTokenRequestInput exchangeRefreshTokenRequestInput,
-            string signInKey)
+        public static ToDoDTO ToToDoDTO(this Todo todo)
         {
-            return new ExchangeRefreshTokenRequest(
-                exchangeRefreshTokenRequestInput.AccessToken,
-                exchangeRefreshTokenRequestInput.RefreshToken,
-                signInKey
-                )
-            {};
+            return new ToDoDTO
+            {
+                Id = todo.Id,
+                Task = todo.Task,
+                Completed = todo.Completed,
+                Date = todo.Date,
+                UserId = todo.UserId
+            };
         }
+
 
     }
 }
