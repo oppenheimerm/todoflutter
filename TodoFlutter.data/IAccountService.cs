@@ -21,5 +21,6 @@ namespace TodoFlutter.data
         Task AddRefreshTokenAsync(string refreshToken, Guid appUserId, string remoteIPAddress);
         Task RemoveOldRefreshTokensAsync(string userId);
         Task<RefreshTokenRespone> ExchangeRefreshTokenAsync(string ipAddress, string refreshToken);
+        Task<GetUserResponse> GetUserProfile(string userId, bool includeTodos = false);
     }
 }

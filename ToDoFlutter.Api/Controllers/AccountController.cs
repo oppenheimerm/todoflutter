@@ -45,6 +45,25 @@ namespace ToDoFlutter.Api.Controllers
             return loginResponse.Success ? Ok(loginResponse) : BadRequest(loginResponse);
         }
 
+        // GET api/account/user
+        [Authorize(AppUserRole.User)]
+        [HttpGet("user")]
+        public async Task<ActionResult> GetById(string userId)
+        {
+            bool isGuidValid = Guid.TryParse(userId, out var guidOutput);
+
+            if (!isGuidValid)
+                return BadRequest();
+
+            if (guidOutput.ToString() != AppUser.Id)
+                return Unauthorized(new { message = "Unauthorized" });
+
+
+            var userResponse = await _iaccountService.GetUserProfile(userId, true);
+
+            return userResponse.Success ? Ok(userResponse) : BadRequest(User);
+        }
+
         // POST api/account/register
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody]Register model)

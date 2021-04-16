@@ -72,6 +72,40 @@ namespace TodoFlutter.data
 
         }
 
+        public async Task<GetUserResponse> GetUserProfile(string userId, bool includeTodos = false)
+        {
+            var user = await _appDbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            if (user != null)
+            {
+                var response = new GetUserResponse(
+                    user.Email,
+                    user.Firstname,
+                    user.Id,
+                    true,
+                    null,
+                    ResponseMessageTypes.GET_USER_SUCCESS
+                    );
+
+                if(includeTodos)
+                {
+                    var todos = await _appDbContext.ToDos.Where(u => u.UserId == userId).ToListAsync();
+                    response.ToDoDTOs = DataExtensions.ToToDoList(todos);
+                }
+
+                return response;
+            }
+            else {
+                var respone = new GetUserResponse(
+                    string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    false,
+                    new[] { new Error("user_request_failure", "Invalid or bad user id") }.ToList()
+                    );
+                return respone;
+            }
+            
+        }
 
         public async Task<CreateUserLoginResponse> AuthenticateUserAsync(string username, string password, string ipAddress)
         {

@@ -21,6 +21,8 @@ namespace TodoFlutter.data.Helpers
         public static string ADD_TODO_FAILURE = "Failed to add a todo item";
         public static string GET_TODO_SUCCESS = "Retrieved todo item";
         public static string GET_TODO_FAILURE = "Failed to retrieve todo";
+        public static string GET_USER_SUCCESS = "User request succeded";
+        public static string GET_USER_FAILURE = "User request failed";
 
 
     }
